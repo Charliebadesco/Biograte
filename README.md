@@ -1,6 +1,5 @@
 # 🌿 Biograte
-Biograte is a project made for The master of Science Computing of EPITECH LYON
-
+Biograte est un projet fait dans le cadre du Master of Science d'Epitech Lyon
 **Simulation écologique en temps réel** – Biomes, niches écologiques et dynamique des espèces
 
 ![Status](https://img.shields.io/badge/status-in%20development-yellow)
