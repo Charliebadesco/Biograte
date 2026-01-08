@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Separator } from './ui/separator';
 import { Badge } from './ui/badge';
 
-// Types pour la simulation
+
 type BiomeType = 'desert' | 'savanna' | 'grassland' | 'forest' | 'rainforest' | 'tundra' | 'empty';
 
 interface Cell {
@@ -14,11 +14,11 @@ interface Cell {
   temperature: number;
   humidity: number;
   altitude: number;
-  vegetation: number; // 0-100
+  vegetation: number; 
   species: string[];
 }
 
-// Définition des biomes avec leurs couleurs et conditions
+
 const BIOMES = {
   empty: { color: '#f5f5f5', name: 'Vide', temp: [0, 100], hum: [0, 100], aggression: 0 },
   tundra: { color: '#c7e9f0', name: 'Toundra', temp: [-10, 10], hum: [10, 40], aggression: 0.6 },
@@ -29,7 +29,7 @@ const BIOMES = {
   rainforest: { color: '#2d6a4f', name: 'Forêt tropicale', temp: [20, 30], hum: [70, 100], aggression: 0.6 },
 };
 
-// Espèces végétales avec leurs niches écologiques
+
 const SPECIES = {
   cactus: { name: 'Cactus', biomes: ['desert'], growth: 0.8, competitiveness: 0.9 },
   lichen: { name: 'Lichen', biomes: ['tundra'], growth: 0.5, competitiveness: 0.4 },
@@ -52,12 +52,12 @@ export function BiomeSimulator() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [generation, setGeneration] = useState(0);
   
-  // Paramètres environnementaux globaux
+  
   const [globalTemp, setGlobalTemp] = useState([15]);
   const [globalHumidity, setGlobalHumidity] = useState([50]);
   const [globalAltitude, setGlobalAltitude] = useState([50]);
 
-  // Initialiser la grille
+  
   useEffect(() => {
     const newGrid: Cell[][] = [];
     for (let i = 0; i < GRID_SIZE; i++) {
@@ -76,7 +76,7 @@ export function BiomeSimulator() {
     setGrid(newGrid);
   }, []);
 
-  // Dessiner la grille sur le canvas
+  
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || grid.length === 0) return;
@@ -84,20 +84,20 @@ export function BiomeSimulator() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Effacer le canvas
+    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Dessiner chaque cellule
+    
     for (let i = 0; i < GRID_SIZE; i++) {
       for (let j = 0; j < GRID_SIZE; j++) {
         const cell = grid[i][j];
         const baseColor = BIOMES[cell.biome].color;
         
-        // Moduler la couleur selon la végétation
+        
         const vegetation = cell.vegetation / 100;
         ctx.fillStyle = baseColor;
         
-        // Si végétation > 0, assombrir la couleur
+        
         if (vegetation > 0) {
           const rgb = hexToRgb(baseColor);
           if (rgb) {
@@ -108,7 +108,7 @@ export function BiomeSimulator() {
         
         ctx.fillRect(j * CELL_SIZE, i * CELL_SIZE, CELL_SIZE, CELL_SIZE);
         
-        // Grille
+        
         ctx.strokeStyle = '#e0e0e0';
         ctx.lineWidth = 0.5;
         ctx.strokeRect(j * CELL_SIZE, i * CELL_SIZE, CELL_SIZE, CELL_SIZE);
@@ -116,7 +116,7 @@ export function BiomeSimulator() {
     }
   }, [grid]);
 
-  // Fonction utilitaire pour convertir hex en RGB
+  
   function hexToRgb(hex: string) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? {
@@ -126,7 +126,7 @@ export function BiomeSimulator() {
     } : null;
   }
 
-  // Logique de simulation
+  
   const simulateStep = () => {
     setGrid((prevGrid) => {
       const newGrid = prevGrid.map((row) => row.map((cell) => ({ ...cell })));
@@ -136,49 +136,49 @@ export function BiomeSimulator() {
           const cell = newGrid[i][j];
           const neighbors = getNeighbors(prevGrid, i, j);
           
-          // 1. Diffusion environnementale (température, humidité)
+          
           const avgTemp = neighbors.reduce((sum, n) => sum + n.temperature, cell.temperature) / (neighbors.length + 1);
           const avgHum = neighbors.reduce((sum, n) => sum + n.humidity, cell.humidity) / (neighbors.length + 1);
           
           cell.temperature = avgTemp * 0.6 + cell.temperature * 0.4;
           cell.humidity = avgHum * 0.6 + cell.humidity * 0.4;
 
-          // 2. Si la cellule est vide, elle peut être colonisée par les voisins
+          
           if (cell.biome === 'empty') {
             const activateNeighbors = neighbors.filter(n => n.biome !== 'empty' && n.vegetation > 30);
             
             if (activateNeighbors.length > 0) {
-              // Choisir un biome voisin dominant
+              
               const biomeCounts: Record<string, number> = {};
               activateNeighbors.forEach(n => {
                 biomeCounts[n.biome] = (biomeCounts[n.biome] || 0) + 1;
               });
               
-              // Probabilité de colonisation basée sur le nombre de voisins
+              
               const colonizationChance = activateNeighbors.length / 8;
               
               if (Math.random() < colonizationChance * 0.3) {
-                // Choisir le biome le plus présent
+                
                 const dominantBiome = Object.entries(biomeCounts)
                   .sort((a, b) => b[1] - a[1])[0][0] as BiomeType;
                 
                 cell.biome = dominantBiome;
-                cell.vegetation = 10; // Début de colonisation
+                cell.vegetation = 10; 
               }
             }
             continue;
           }
 
-          // 3. Adaptation du biome selon les conditions environnementales
+          
           const currentBiomeScore = isBiomeOptimal(cell);
           const bestAlternative = findBestBiomeForConditions(cell.temperature, cell.humidity, cell.altitude);
           const currentAggression = BIOMES[cell.biome].aggression;
           
-          // Remplacement TRÈS agressif si un autre biome est plus adapté
+          
           if (bestAlternative.biome !== cell.biome) {
             const scoreDifference = bestAlternative.score - currentBiomeScore;
             
-            // Plus la différence est grande, plus la probabilité de remplacement est élevée
+            
             const replacementChance = Math.max(0, scoreDifference * 0.8);
             
             if (Math.random() < replacementChance) {
@@ -188,7 +188,7 @@ export function BiomeSimulator() {
             }
           }
           
-          // Mort rapide si conditions très défavorables
+          
           if (currentBiomeScore < 0.3) {
             const deathChance = (1 - currentBiomeScore) * 0.3;
             if (Math.random() < deathChance) {
@@ -199,12 +199,12 @@ export function BiomeSimulator() {
             }
           }
 
-          // 4. Croissance de la végétation
+          
           if (currentBiomeScore > 0.3) {
             const growthRate = 2.0 * currentBiomeScore;
             cell.vegetation = Math.min(100, cell.vegetation + growthRate);
             
-            // Introduire des espèces
+            
             Object.entries(SPECIES).forEach(([key, species]) => {
               if (species.biomes.includes(cell.biome) && !cell.species.includes(key)) {
                 if (Math.random() < species.growth * 0.12 * currentBiomeScore) {
@@ -213,16 +213,16 @@ export function BiomeSimulator() {
               }
             });
           } else {
-            // Déclin RAPIDE si conditions défavorables
+            
             const declineRate = 4 * (1 - currentBiomeScore);
             cell.vegetation = Math.max(0, cell.vegetation - declineRate);
             
-            // Perte d'espèces
+            
             if (Math.random() < 0.35) {
               cell.species = cell.species.filter(() => Math.random() > 0.5);
             }
             
-            // Si la végétation est faible, le biome meurt
+            
             if (cell.vegetation < 10 && Math.random() < 0.25) {
               cell.biome = 'empty';
               cell.species = [];
@@ -231,7 +231,7 @@ export function BiomeSimulator() {
             }
           }
 
-          // 5. Dispersion des espèces vers les voisins
+          
           if (cell.species.length > 0 && cell.vegetation > 30) {
             const emptyOrCompatibleNeighbors = neighbors.filter(n => {
               const nCell = newGrid[n.i][n.j];
@@ -253,10 +253,10 @@ export function BiomeSimulator() {
             }
           }
 
-          // 6. Compétition FÉROCE et invasion entre biomes adjacents
+          
           const activeNeighbors = neighbors.filter(n => n.biome !== 'empty');
           
-          // Pour chaque type de biome voisin différent, calculer sa force d'invasion
+          
           const invasionThreats: Array<{ biome: BiomeType, strength: number, count: number, aggression: number }> = [];
           
           activeNeighbors.forEach(neighbor => {
@@ -270,7 +270,7 @@ export function BiomeSimulator() {
               
               const neighborAggression = BIOMES[neighbor.biome].aggression;
               
-              // Force d'invasion = adaptation + végétation + agressivité du biome
+              
               const invasionStrength = (neighborScore * 0.6) + (neighbor.vegetation / 150) + (neighborAggression * 0.3);
               
               const existing = invasionThreats.find(t => t.biome === neighbor.biome);
@@ -288,22 +288,22 @@ export function BiomeSimulator() {
             }
           });
           
-          // Trier par force d'invasion totale
+          
           invasionThreats.sort((a, b) => (b.strength * b.count * (1 + b.aggression)) - (a.strength * a.count * (1 + a.aggression)));
           
-          // Invasions multiples possibles
+          
           invasionThreats.forEach((threat, index) => {
-            if (index > 2) return; // Maximum 3 menaces considérées
+            if (index > 2) return; 
             
             const currentStrength = currentBiomeScore * (cell.vegetation / 100) * (1 + currentAggression);
             const threatPower = threat.strength * threat.count * (1 + threat.aggression);
             
-            // Probabilité d'invasion basée sur le rapport de force
+            
             const invasionChance = Math.max(0, (threatPower - currentStrength) * 0.35);
             
             if (Math.random() < invasionChance) {
               cell.biome = threat.biome;
-              cell.vegetation = Math.min(35, threat.count * 8); // Plus de voisins = plus de végétation initiale
+              cell.vegetation = Math.min(35, threat.count * 8); 
               cell.species = [];
             }
           });
@@ -316,7 +316,7 @@ export function BiomeSimulator() {
     setGeneration((g) => g + 1);
   };
 
-  // Obtenir les voisins d'une cellule
+  
   function getNeighbors(grid: Cell[][], i: number, j: number) {
     const neighbors: Array<Cell & { i: number; j: number }> = [];
     for (let di = -1; di <= 1; di++) {
@@ -332,9 +332,9 @@ export function BiomeSimulator() {
     return neighbors;
   }
 
-  // Déterminer le biome optimal selon les conditions
+  
   function determineBiome(temp: number, hum: number, alt: number): BiomeType {
-    // Altitude influence la température
+    
     const adjustedTemp = temp - (alt / 10);
 
     if (adjustedTemp < 10 && hum < 40) return 'tundra';
@@ -347,25 +347,25 @@ export function BiomeSimulator() {
     return 'grassland';
   }
 
-  // Vérifier si les conditions sont optimales pour le biome
+  
   function isBiomeOptimal(cell: Cell): number {
     const biome = BIOMES[cell.biome];
     const adjustedTemp = cell.temperature - (cell.altitude / 10);
     
-    // Calculer la distance par rapport à la plage optimale
+    
     const tempCenter = (biome.temp[0] + biome.temp[1]) / 2;
     const humCenter = (biome.hum[0] + biome.hum[1]) / 2;
     
     const tempDist = Math.abs(adjustedTemp - tempCenter) / ((biome.temp[1] - biome.temp[0]) / 2);
     const humDist = Math.abs(cell.humidity - humCenter) / ((biome.hum[1] - biome.hum[0]) / 2);
     
-    // Score basé sur la proximité au centre optimal (0 = parfait, >1 = hors zone)
+    
     const score = Math.max(0, 1 - (tempDist + humDist) / 2);
     
     return Math.max(0, Math.min(1, score));
   }
 
-  // Vérifier si un biome est optimal pour des conditions spécifiques
+  
   function isBiomeOptimalForConditions(biome: BiomeType, temp: number, hum: number, alt: number): number {
     const adjustedTemp = temp - (alt / 10);
     const biomeData = BIOMES[biome];
@@ -381,7 +381,7 @@ export function BiomeSimulator() {
     return Math.max(0, Math.min(1, score));
   }
 
-  // Trouver le biome le plus adapté aux conditions actuelles
+  
   function findBestBiomeForConditions(temp: number, hum: number, alt: number): { biome: BiomeType, score: number } {
     let bestBiome: BiomeType = 'grassland';
     let bestScore = 0;
@@ -399,7 +399,7 @@ export function BiomeSimulator() {
     return { biome: bestBiome, score: bestScore };
   }
 
-  // Boucle de simulation
+  
   useEffect(() => {
     if (!isRunning) return;
 
@@ -410,7 +410,7 @@ export function BiomeSimulator() {
     return () => clearInterval(interval);
   }, [isRunning, grid]);
 
-  // Gestion du dessin à la souris
+  
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -426,7 +426,7 @@ export function BiomeSimulator() {
         newGrid[y][x].temperature = globalTemp[0];
         newGrid[y][x].humidity = globalHumidity[0];
         newGrid[y][x].altitude = globalAltitude[0];
-        newGrid[y][x].vegetation = 50; // Commencer avec de la végétation
+        newGrid[y][x].vegetation = 50; 
         return newGrid;
       });
     }
@@ -457,7 +457,7 @@ export function BiomeSimulator() {
     setGrid(newGrid);
   };
 
-  // Calculer les statistiques
+  
   const stats = grid.flat().reduce((acc, cell) => {
     if (cell.biome !== 'empty') {
       acc.totalCells++;
@@ -469,7 +469,7 @@ export function BiomeSimulator() {
 
   return (
     <div className="flex gap-4 p-4 h-screen">
-      {/* Panneau de contrôle */}
+      
       <div className="w-80 space-y-4 overflow-y-auto">
         <Card>
           <CardHeader>
@@ -615,7 +615,7 @@ export function BiomeSimulator() {
         </Card>
       </div>
 
-      {/* Canvas de simulation */}
+      
       <div className="flex-1 flex items-center justify-center bg-muted/20 rounded-lg">
         <div className="relative">
           <canvas
